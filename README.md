@@ -4,6 +4,9 @@
 
 Simple BPMN Engine in C#.NET
 
+## Goal
+![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
+
 ## Usage
 ```c#
 using Maestro;
