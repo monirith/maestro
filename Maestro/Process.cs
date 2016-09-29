@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using t = System.Threading.Tasks;
@@ -19,6 +19,9 @@ namespace Maestro
 
         public Process(string bpmnFile)
         {
+            if (!File.Exists(bpmnFile))
+                throw new Exception("File " + bpmnFile + " not found");
+
             XDocument doc = XDocument.Load(bpmnFile);
             NS = @"http://www.omg.org/spec/BPMN/20100524/MODEL";
             ProcessXML = doc.Root.Element(NS + "process");
@@ -271,7 +274,7 @@ namespace Maestro
         {
             //TODO: Multicontext
             //Currently ProcessInstance hold a single parameters context
-            //It can be modified by mutiple branches of the flow possibly causing unexpected results
+            //It can be modified by multiple branches of the flow possibly causing unexpected results
 
             //ProcessInstance.SetOutputParameters(Task.Result);
             foreach (var node in NextNodes)
