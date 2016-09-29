@@ -5,6 +5,10 @@
 Simple BPMN Engine in C#.NET
 
 ## Goal
+
+Having a usual BPMN Engine means either services returns to the running process or service to service interactions are managed outside of the scope of the engine.
+
+The goal is to have both business processes and service to service interactions at the same place but executed where it's relevant.
 ![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
 
 ## Usage
