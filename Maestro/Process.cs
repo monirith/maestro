@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -40,12 +41,20 @@ namespace Maestro
             processInstance.Nodes = nodes;
 
             return processInstance;
-    }
+        }
 
         private IDictionary<string, ProcessNode> BuildNodes(XElement processXML)
         {
             var nodes = processXML.Elements().ToDictionary(e => e.Attribute("id").Value, e => new ProcessNode(e.Attribute("id").Value, e.Name.LocalName));
             nodes.Where(e => e.Value.NodeType == "property").Select(e => e.Key).ToList().ForEach(k => nodes.Remove(k));
+            var scripts = processXML.Elements().Elements(NS + "script")
+                .Select(s => new { id = s.Parent.Attribute("id").Value, expression = s.Value });
+            foreach (var s in scripts) nodes[s.id].Expression = s.expression;
+
+            var conditionExpressions = processXML.Elements().Elements(NS + "conditionExpression")
+                .Select(c => new { id = c.Parent.Attribute("id").Value, expression = c.Value });
+            foreach (var c in conditionExpressions) nodes[c.id].Expression = c.expression;
+
             return nodes;
         }
 
@@ -64,7 +73,6 @@ namespace Maestro
             var next = (seq.Any() ? seq : NextElement(current, ProcessXML));
             node.NextNodes = new List<ProcessNode>();
             
-
             foreach (var n in next)
             {
                 var nextNode = nodes[n.Attribute("id").Value];
@@ -247,6 +255,7 @@ namespace Maestro
         public ICollection<ProcessNode> NextNodes { get; set; }
         public ICollection<ProcessNode> PreviousNodes { get; set; }
         private t.Task Task { get; set; }
+        public string Expression { get; set; }
 
         public ProcessNode()
         {
@@ -267,6 +276,7 @@ namespace Maestro
         {
             NodeHandler = ProcessInstance.NodeHandlers[NodeType];
             //NodeHandler.Execute(processNode, Parameters);
+            if (processNode.InputParameters == null) processNode.InputParameters = ProcessInstance.InputParameters;
             Task = new t.Task(() => NodeHandler.Execute(processNode, previousNode));
             Task.Start();
         }
@@ -325,7 +335,23 @@ namespace Maestro
         void INodeHandler.Execute(ProcessNode processNode, ProcessNode previousNode)
         {
             Console.WriteLine(processNode.NodeName + " Executing Sequence");
-            processNode.Done();
+            bool result = true;
+            if (processNode.Expression != null)
+            {
+                Console.WriteLine(processNode.NodeName + " Conditional Sequence");
+                var globals = new Globals(processNode.InputParameters);
+                try
+                {
+                    result = CSharpScript.EvaluateAsync<bool>(processNode.Expression, globals: globals).Result;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+
+            if (result)
+                processNode.Done();
         }
     }
 
@@ -344,7 +370,29 @@ namespace Maestro
         void INodeHandler.Execute(ProcessNode processNode, ProcessNode previousNode)
         {
             Console.WriteLine(processNode.NodeName + " Executing Script");
+
+            if (processNode.Expression != null)
+            {
+                var globals = new Globals(processNode.InputParameters);
+                try
+                {
+                    processNode.OutputParameters = CSharpScript.EvaluateAsync<IDictionary<string, object>>(processNode.Expression, globals: globals).Result;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
             processNode.Done();
+        }
+    }
+
+    public class Globals
+    {
+        public IDictionary<string, object> globals;
+        public Globals(IDictionary<string, object> parameters)
+        {
+            globals = parameters;
         }
     }
     internal class DefaultInclusiveGatewayHandler : INodeHandler
