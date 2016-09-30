@@ -18,12 +18,9 @@ namespace Maestro
         {
         }
 
-        public Process(string bpmnFile)
+        public Process(Stream bpmnStream)
         {
-            if (!File.Exists(bpmnFile))
-                throw new Exception("File " + bpmnFile + " not found");
-
-            XDocument doc = XDocument.Load(bpmnFile);
+            XDocument doc = XDocument.Load(bpmnStream);
             NS = @"http://www.omg.org/spec/BPMN/20100524/MODEL";
             ProcessXML = doc.Root.Element(NS + "process");
             Properties = PropertyInitializer(ProcessXML, NS);
@@ -55,6 +52,12 @@ namespace Maestro
                 .Select(c => new { id = c.Parent.Attribute("id").Value, expression = c.Value });
             foreach (var c in conditionExpressions) nodes[c.id].Expression = c.expression;
 
+            //Quick fix for zmq example
+            //TODO Proper process var/assignment to node var mapping
+            var taskExpressions = processXML.Elements(NS + "task").Elements(NS + "dataInputAssociation").Elements(NS + "assignment").Elements(NS + "from")
+                .Select(e => new { id = e.Parent.Parent.Parent.Attribute("id").Value, expression = e.Value });
+            foreach (var e in taskExpressions) nodes[e.id].Expression = e.expression;
+
             return nodes;
         }
 
@@ -81,6 +84,18 @@ namespace Maestro
                 node.NextNodes.Add(nextNode);
                 BuildLinkedNodes(n, ref nextNode, nodes, processInstance);
             }
+        }
+
+        internal string GetAssociation(string nodeId, string nodeVariableName)
+        {
+            var node = ProcessXML.Elements().Where(e => e.Attribute("id").Value == nodeId);
+            var inputId = node.Elements(NS + "ioSpecification").Elements(NS + "dataInput")
+                .Where(e => e.Attribute("name").Value == nodeVariableName).FirstOrDefault().Attribute("id").Value;
+            var propertyId = node.Elements(NS + "dataInputAssociation")
+                .Where(d => d.Element(NS + "targetRef").Value == inputId).Elements(NS + "sourceRef").FirstOrDefault().Value;
+            var propertyName = ProcessXML.Elements(NS + "property")
+                .Where(e => e.Attribute("id").Value == propertyId).Attributes("name").FirstOrDefault().Value;
+            return propertyName;
         }
 
         private IEnumerable<Property> PropertyInitializer(XElement process, XNamespace ns)
@@ -227,6 +242,8 @@ namespace Maestro
 
         public void Start(IDictionary<string, object> parameters)
         {
+
+            //TODO Get node variables not process instance var
             InputParameters = parameters;
             StartNode.InputParameters = parameters;
             Start();

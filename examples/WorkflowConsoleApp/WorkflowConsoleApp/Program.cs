@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Maestro;
+using System.IO;
 
 namespace WorkflowConsoleApp
 {
@@ -8,7 +9,7 @@ namespace WorkflowConsoleApp
     {
         static void Main(string[] args)
         {
-            var p = new Process("flow.bpmn");
+            var p = new Process(File.OpenRead("flow.bpmn"));
             var processInstance = p.NewProcessInstance();
             processInstance.SetDefaultHandlers();
             processInstance.SetHandler("task", new MyTaskHandler());
