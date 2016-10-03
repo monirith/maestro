@@ -18,7 +18,7 @@ The goal is to have both business processes and service to service interactions 
 
 Demo BPMN workflow
 
-![alt tag](https://github.com/monirith/maestro/blob/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png)
+![alt tag](https://github.com/monirith/maestro/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png)
 
 ### Running as local workflow
 
