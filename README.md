@@ -68,6 +68,15 @@ namespace WorkflowConsoleApp
 
 ### Running as SOA/microservice workflow with remote BPMN execution
 
+Using the previous flow. Task 2 is set to send this flow to be executed remotely
+
+![alt tag](https://github.com/monirith/maestro/blob/master/examples/ZMQExample/micro.bpmn.png)
+
+This flow contains a task to execute on a third service
+
+Service1 runs => Service1 execute Task2 which sends a flow for Service2 to execute => Service2 executes the flow, sends work to Service3
+
+
 #### Result
 ![alt tag](https://github.com/monirith/maestro/blob/master/examples/ZMQExample/result.png)
 
