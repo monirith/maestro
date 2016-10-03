@@ -2,18 +2,25 @@
 
 ## Synopsis
 
-Simple BPMN Engine in C#.NET
+A BPMN Engine in C#.Net
 
 ## Goal
 
-Having a usual BPMN Engine means either services returns to the running process or service to service interactions are managed outside of the scope of the engine.
+An architecture with a workflow engine means either all called services return to the engine to continue the current process or services have knownledge of other services meaning you have interactions which are managed outside of the scope of the engine.
 
-The goal is to have both business processes and service to service interactions at the same place but executed where it's relevant.
+The goal is to have both business processes and service to service interactions defined with BPMN in one place but executed by the relevant service.
+
+
 ![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
+
 
 ## Examples
 
-### Local workflow
+Demo BPMN workflow
+
+![alt tag](https://github.com/monirith/maestro/blob/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png)
+
+### Running as local workflow
 
 ```c#
 using Maestro;
@@ -59,7 +66,7 @@ namespace WorkflowConsoleApp
 
 ```
 
-### SOA/microservice workflow with remote BPMN execution
+### Running as SOA/microservice workflow with remote BPMN execution
 
 #### Result
 ![alt tag](https://github.com/monirith/maestro/blob/master/examples/ZMQExample/result.png)
