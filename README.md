@@ -2,14 +2,15 @@
 
 ## Synopsis
 
-A BPMN Engine in C#.Net
+Lightweight BPMN Interpreter in C#.Net
 
 ## Goal
 
 An architecture with a workflow engine means either all called services return to the engine to continue the current process or services have knownledge of other services meaning you have interactions which are managed outside of the scope of the engine.
 
-The goal is to have both business processes and service to service interactions defined with BPMN in one place but executed by the relevant service.
+Primary goal is to have both business processes and service to service interactions defined with BPMN in one place but executed by the relevant service.
 
+Usual BPMN engine are heavy, centralised and offer all BPMN features most of which are not always needed. They are not suitable to be deployed along with a microservice as most of them need an app server. Another goal is to have a lightweight component leaving node handling to the service itself.
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
 
