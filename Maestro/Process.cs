@@ -11,7 +11,7 @@ namespace Maestro
 {
     public class Process
     {
-        public IEnumerable<Property> Properties { get; set; }
+        internal IEnumerable<Property> Properties { get; set; }
         public XElement ProcessXML { get; set; }
         public XNamespace NS { get; set; }
         private Process()
@@ -125,7 +125,7 @@ namespace Maestro
         }
     }
 
-    public class Property
+    internal class Property
     {
         public string Id { get; set; }
         public string Name { get; set; }
@@ -164,7 +164,7 @@ namespace Maestro
         public IDictionary<string, object> OutputParameters { get; set; }
         public ProcessNode StartNode { get; internal set; }
         public IDictionary<string, ProcessNode> Nodes { get; set; }
-        public IDictionary<string, INodeHandler> nodeHandlers;
+        private IDictionary<string, INodeHandler> nodeHandlers;
         public IDictionary<string, INodeHandler> NodeHandlers
         {
             get
@@ -242,7 +242,6 @@ namespace Maestro
 
         public void Start(IDictionary<string, object> parameters)
         {
-
             //TODO Get node variables not process instance var
             InputParameters = parameters;
             StartNode.InputParameters = parameters;
@@ -347,6 +346,7 @@ namespace Maestro
             processNode.Done();
         }
     }
+
     internal class DefaultSequenceHandler : INodeHandler
     {
         void INodeHandler.Execute(ProcessNode processNode, ProcessNode previousNode)
@@ -404,7 +404,7 @@ namespace Maestro
         }
     }
 
-    public class Globals
+    internal class Globals
     {
         public IDictionary<string, object> globals;
         public Globals(IDictionary<string, object> parameters)
@@ -412,6 +412,7 @@ namespace Maestro
             globals = parameters;
         }
     }
+
     internal class DefaultInclusiveGatewayHandler : INodeHandler
     {
         ConcurrentDictionary<ProcessNode, ICollection<ProcessNode>> sequenceWait = new ConcurrentDictionary<ProcessNode, ICollection<ProcessNode>>();
