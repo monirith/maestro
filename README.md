@@ -1,4 +1,4 @@
-# Maestro BPMN Engine
+# Maestro BPMN
 
 ## Synopsis
 
