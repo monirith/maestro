@@ -14,6 +14,13 @@ Usual BPMN engine are heavy, centralised and offer all BPMN features most of whi
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
 
+Another issue with usual BPMN engines is dealing with process variables. Usual engines use process variables as a holder of inputs and outputs. Nodes map their variables from the process inputs and map their outputs back to the process variables. This introduces racing and state issues, especially when there are multiple branches sharing the same process variables.
+
+[Currently working on this]
+A better way to deal with this is to use a functional programming style. Diverging gateways will spawn clones of the last node outputs and converging gateways will merge or aggregate the sets of output variables like a MapReduce.
+
+![alt tag](https://github.com/monirith/maestro/blob/master/variables.png)
+
 
 ## Examples
 
