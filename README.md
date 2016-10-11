@@ -225,7 +225,7 @@ namespace ZMQExampleService
 }
 ```
 
-##### Remote Service called by the previous service workflow
+#### Remote Service called by the previous service workflow
 ```c#
 namespace ZMQExampleServiceWithoutMaestro
 {
