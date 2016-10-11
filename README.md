@@ -10,15 +10,15 @@ An architecture with a workflow engine means either all called services return t
 
 Primary goal is to have both business processes and service to service interactions defined with BPMN in one place but executed by the relevant service.
 
-Usual BPMN engine are heavy, centralised and offer all BPMN features most of which are not always needed. They are not suitable to be deployed along with a microservice as most of them need an app server. Another goal is to have a lightweight component leaving node handling to the service itself.
+Usual BPMN engine are heavy and offer BPMN features which are not always needed. They are not suitable to be deployed along with a service. This project provides a lightweight component leaving the element handling to the target service.
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
 
 Another issue with usual BPMN engines is dealing with process variables. Usual engines use process variables as a holder of inputs and outputs. Nodes map their variables from the process inputs and map their outputs back to the process variables. This introduces racing and state issues, especially when there are multiple branches sharing the same process variables.
 
-[Currently working on this]
+[Current work in progress]
 
-A better way to deal with this is to use a functional programming style with immutable structures. Diverging gateways will spawn clones of the last node outputs and converging gateways will merge or aggregate the sets of output variables like a MapReduce.
+A way to deal with this is to consider nodes as functions which take inputs and return outputs avoiding side effects from using shared variables. For multibranch workflows, diverging gateways will spawn clones of the last node outputs and converging gateways will merge or aggregate the sets of outputs.
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/variables.png)
 
@@ -34,6 +34,8 @@ A better way to deal with this is to use a functional programming style with imm
 - An default implementation of ScriptTask element handling running C# Roslyn Scripting
 
 - InclusiveGateway process variables merge/aggregate (TODO)
+
+- Parameters serialization (TODO)
 
 
 ## Examples
