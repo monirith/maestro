@@ -6,7 +6,7 @@ Lightweight BPMN Interpreter in C#.Net
 
 ## Goal
 
-An architecture with a workflow engine means either all called services return to the engine to continue the current process or services have knownledge of other services meaning you have interactions which are managed outside of the scope of the engine.
+An architecture with a workflow engine means either all called services return to the engine to continue the current process (SOA) or services have knowledge of other services (microservice type architecture) meaning you have interactions which are managed outside of the scope of the engine.
 
 Primary goal is to have both business processes and service to service interactions defined with BPMN in one place but executed by the relevant service.
 
