@@ -23,13 +23,26 @@ A better way to deal with this is to use a functional programming style with imm
 ![alt tag](https://github.com/monirith/maestro/blob/master/variables.png)
 
 
+## Features
+
+- Start a BPMN workflow with custom handlers for any element.
+
+- Dispatch a BPMN workflow to be executed by another service.
+
+- An default implementation of InclusiveGateway element handling, waiting for all branch to reach before continuing. Know defect: if a branch has a conditional sequence, it is possible that it will never reach the gateway. Possible fix: branch executions resulting in a premature endEvent could notify the next inclusiveGateway.
+
+- An default implementation of ScriptTask element handling running C# Roslyn Scripting
+
+- InclusiveGateway process variables merge/aggregate (TODO)
+
+
 ## Examples
 
 Demo BPMN workflow
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png)
 
-### Running as local workflow
+### Example 1: Running as local workflow
 
 ```c#
 using Maestro;
@@ -75,7 +88,8 @@ namespace WorkflowConsoleApp
 
 ```
 
-### Running as SOA/microservice workflow with remote BPMN execution
+
+### Example 2: Running as SOA/microservice workflow with remote BPMN execution
 
 Using the previous flow. Task 2 is set to send this flow to be executed remotely
 
@@ -89,7 +103,7 @@ Service1 runs => Service1 execute Task2 which sends a flow for Service2 to execu
 #### Result
 ![alt tag](https://github.com/monirith/maestro/blob/master/examples/ZMQExample/result.png)
 
-#### Main Workflow service
+#### Initial workflow service
 ```c#
 namespace ZMQExample
 {
@@ -147,7 +161,7 @@ namespace ZMQExample
 }
 ```
 
-#### Remote Service with Workflow Execution
+#### Remote Service receiving a workflow to execute
 ```c#
 namespace ZMQExampleService
 {
@@ -211,7 +225,7 @@ namespace ZMQExampleService
 }
 ```
 
-##### Remote Service
+##### Remote Service called by the previous service workflow
 ```c#
 namespace ZMQExampleServiceWithoutMaestro
 {
