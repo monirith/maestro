@@ -29,9 +29,9 @@ A way to deal with this is to consider nodes as functions which take inputs and 
 
 - Dispatch a BPMN workflow to be executed by another service.
 
-- An default implementation of InclusiveGateway element handling, waiting for all branch to reach before continuing. Know defect: if a branch has a conditional sequence, it is possible that it will never reach the gateway. Possible fix: branch executions resulting in a premature endEvent could notify the next inclusiveGateway.
+- A default implementation of InclusiveGateway element handling, waiting for all branch to reach before continuing. Know defect: if a branch has a conditional sequence, it is possible that it will never reach the gateway. Possible fix: branch executions resulting in a premature endEvent could notify the next inclusiveGateway.
 
-- An default implementation of ScriptTask element handling running C# Roslyn Scripting
+- A default implementation of ScriptTask element handling running C# Roslyn Scripting
 
 - InclusiveGateway process variables merge/aggregate (TODO)
 
