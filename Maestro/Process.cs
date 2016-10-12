@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -35,7 +36,7 @@ namespace Maestro
             BuildLinkedNodes(current, ref node, nodes, processInstance);
             processInstance.Id = Guid.NewGuid().ToString();
             processInstance.StartNode = node;
-            processInstance.Nodes = nodes;
+            processInstance.Nodes = nodes.ToImmutableDictionary();
 
             return processInstance;
         }
@@ -145,8 +146,8 @@ namespace Maestro
     {
         public string Id { get; set; }
         public Process Process { get; }
-        private IDictionary<string, object> inputParameters;
-        public IDictionary<string, object> InputParameters
+        private IImmutableDictionary<string, object> inputParameters;
+        public IImmutableDictionary<string, object> InputParameters
         {
             get
             {
@@ -161,9 +162,9 @@ namespace Maestro
                     throw new Exception("Parameter type does not match process definition");
             }
         }
-        public IDictionary<string, object> OutputParameters { get; set; }
+        public IImmutableDictionary<string, IImmutableDictionary<string, object>> OutputParameters { get; set; }
         public ProcessNode StartNode { get; internal set; }
-        public IDictionary<string, ProcessNode> Nodes { get; set; }
+        public IImmutableDictionary<string, ProcessNode> Nodes { get; set; }
         private IDictionary<string, INodeHandler> nodeHandlers;
         public IDictionary<string, INodeHandler> NodeHandlers
         {
@@ -234,7 +235,7 @@ namespace Maestro
             return nodeTypes.All(t => handlers.Keys.Contains(t));
         }
 
-        private bool ValidParameters(IDictionary<string, object> parameters)
+        private bool ValidParameters(IImmutableDictionary<string, object> parameters)
         {
             var propertyMap = Process.Properties.ToDictionary(p => p.Name, p => p.StructureRef);
             return parameters.All(p => p.Value.GetType().Name.ToLower() == propertyMap[p.Key].ToLower());
@@ -243,14 +244,19 @@ namespace Maestro
         public void Start(IDictionary<string, object> parameters)
         {
             //TODO Get node variables not process instance var
-            InputParameters = parameters;
-            StartNode.InputParameters = parameters;
+            InputParameters = parameters.ToImmutableDictionary();
+            StartNode.InputParameters = parameters.ToImmutableDictionary();
             Start();
         }
 
-        internal void SetOutputParameters(IDictionary<string, object> result)
+        internal void SetOutputParameters(ProcessNode node)
         {
-            OutputParameters = result;
+            if (OutputParameters == null)
+            {
+                OutputParameters = ImmutableDictionary.Create<string, IImmutableDictionary<string, object>>();
+            }
+
+            OutputParameters.Add(node.NodeName, node.OutputParameters);
         }
     }
 
@@ -265,8 +271,8 @@ namespace Maestro
         public string NodeName { get; set; }
         public string NodeType { get; set; }
         public ProcessInstance ProcessInstance { get; set; }
-        public IDictionary<string, object> InputParameters { get; set; }
-        public IDictionary<string, object> OutputParameters { get; set; }
+        public IImmutableDictionary<string, object> InputParameters { get; set; }
+        public IImmutableDictionary<string, object> OutputParameters { get; set; }
         public INodeHandler NodeHandler { get; set; }
         public ICollection<ProcessNode> NextNodes { get; set; }
         public ICollection<ProcessNode> PreviousNodes { get; set; }
@@ -291,20 +297,18 @@ namespace Maestro
         public void Execute(ProcessNode processNode, ProcessNode previousNode)
         {
             NodeHandler = ProcessInstance.NodeHandlers[NodeType];
-            //NodeHandler.Execute(processNode, Parameters);
             if (processNode.InputParameters == null) processNode.InputParameters = ProcessInstance.InputParameters;
             Task = new t.Task(() => NodeHandler.Execute(processNode, previousNode));
             Task.Start();
         }
         public void Done()
         {
-            //TODO: Multicontext
-            //Currently ProcessInstance hold a single parameters context
-            //It can be modified by multiple branches of the flow possibly causing unexpected results
-
-            //ProcessInstance.SetOutputParameters(Task.Result);
             foreach (var node in NextNodes)
             {
+                //to replace with variable resolution
+                //for each node retrieve input parameters defined in BPMN
+                //retrieve from node.OutputParameters (results of previous node)
+                //retrieve missing necessary input from process variables
                 node.InputParameters = OutputParameters;
                 node.Execute(node, this);
             }
@@ -356,10 +360,12 @@ namespace Maestro
             if (processNode.Expression != null)
             {
                 Console.WriteLine(processNode.NodeName + " Conditional Sequence");
-                var globals = new Globals(processNode.InputParameters);
+                Console.WriteLine("Condition: " + processNode.Expression);
+                var globals = new Globals(processNode.InputParameters.ToDictionary(e => e.Key, e => e.Value));
                 try
                 {
                     result = CSharpScript.EvaluateAsync<bool>(processNode.Expression, globals: globals).Result;
+                    Console.WriteLine("Condition result: " + result.ToString());
                 }
                 catch (Exception e)
                 {
@@ -368,7 +374,9 @@ namespace Maestro
             }
 
             if (result)
+            {
                 processNode.Done();
+            }
         }
     }
 
@@ -377,7 +385,7 @@ namespace Maestro
         void INodeHandler.Execute(ProcessNode processNode, ProcessNode previousNode)
         {
             Console.WriteLine(processNode.NodeName + " Executing End");
-            processNode.ProcessInstance.SetOutputParameters(processNode.OutputParameters);
+            processNode.ProcessInstance.SetOutputParameters(processNode);
             processNode.Done();
         }
     }
@@ -390,10 +398,13 @@ namespace Maestro
 
             if (processNode.Expression != null)
             {
-                var globals = new Globals(processNode.InputParameters);
+                Console.WriteLine("Script: " + processNode.Expression);
+                var globals = new Globals(processNode.InputParameters.ToDictionary(e => e.Key, e => e.Value));
                 try
                 {
-                    processNode.OutputParameters = CSharpScript.EvaluateAsync<IDictionary<string, object>>(processNode.Expression, globals: globals).Result;
+                    processNode.OutputParameters =
+                        CSharpScript.EvaluateAsync<IDictionary<string, object>>(processNode.Expression, globals: globals)
+                        .Result.ToImmutableDictionary();
                 }
                 catch (Exception e)
                 {
@@ -404,7 +415,7 @@ namespace Maestro
         }
     }
 
-    internal class Globals
+    public class Globals
     {
         public IDictionary<string, object> globals;
         public Globals(IDictionary<string, object> parameters)
