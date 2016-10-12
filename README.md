@@ -6,19 +6,19 @@ Lightweight BPMN Interpreter in C#.Net
 
 ## Goal
 
-An architecture with a workflow engine means either all called services return to the engine to continue the current process (SOA) or services have knowledge of other services (microservice type architecture) meaning you have interactions which are managed outside of the scope of the engine.
+An architecture with a workflow engine means either all called services return to the engine to continue the current process (SOA) or services have knowledge of other services (microservice architecture) meaning you have interactions which are managed outside of the scope of the engine.
 
-Primary goal is to have both business processes and service to service interactions defined with BPMN in one place but executed by the relevant service.
+Primary goal is to have both business processes and service to service interactions defined with BPMN in a single place and executed by the relevant service.
 
-Usual BPMN engine are heavy and offer BPMN features which are not always needed. They are not suitable to be deployed along with a service. This project provides a lightweight component leaving the element handling to the target service.
+Usual BPMN engines are heavy and offer BPMN features which are not needed by all services. They are not suitable to be deployed along with a lightweight service. This project aims to provide a lightweight dependancy making a service BPMN ready. This service only does what it is supposed to do leaving the interaction with other services to be decided by business processes.
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/maestro.png)
 
-Another issue with usual BPMN engines is dealing with process variables. Usual engines use process variables as a holder of inputs and outputs. Nodes map their variables from the process inputs and map their outputs back to the process variables. This introduces racing and state issues, especially when there are multiple branches sharing the same process variables.
+Another issue with usual BPMN engines is dealing with process variables. Usual engines use process variables as a holder of inputs and outputs. Nodes map their variables from the process variables and map their outputs back to the process variables, introducing racing and state issues when multiple branches are sharing the same process variables.
 
 [Current work in progress]
 
-A way to deal with this is to consider nodes as functions which take inputs and return outputs avoiding side effects from using shared variables. For multibranch workflows, diverging gateways will spawn clones of the last node outputs and converging gateways will merge or aggregate the sets of outputs.
+To avoid side effects, a node should take its inputs from a local context initialy built from the process variables, and return outputs which are used as local context for the next node. If the variable is not found in the local context, it will be resolved from the process variable inputs. For multibranch workflows, diverging gateways should clone the previous node outputs for each branch and converging gateways should merge or aggregate the sets of outputs.
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/variables.png)
 
@@ -29,15 +29,24 @@ A way to deal with this is to consider nodes as functions which take inputs and 
 
 - Dispatch a BPMN workflow to be executed by another service.
 
-- A default implementation of InclusiveGateway element handling, waiting for all branch to reach before continuing. Know defect: if a branch has a conditional sequence, it is possible that it will never reach the gateway. Possible fix: branch executions resulting in a premature endEvent could notify the next inclusiveGateway.
+- A default implementation of InclusiveGateway element handling, waiting for all branch to reach before continuing. Known defect: if a branch has a conditional sequence, it is possible that it will never reach the gateway and the gateway will wait forever. Possible fix: premature endEvent from a conditional sequence could create a tree of unreachable branches connecting to an InclusiveGateway.
 
 - A default implementation of ScriptTask element handling running C# code via Roslyn Scripting
 
-- A default implementation of conditional Sequence element handling evaluating a C# condition via Roslyn Scripting.
+- A default implementation of conditional sequence element handling evaluating a C# condition via Roslyn Scripting.
 
-- InclusiveGateway process variables merge/aggregate (TODO)
 
-- Parameters serialization (TODO)
+## TODO
+
+- Dynamic load of BPMN to be sent (currently remote BPMN process is passed as a process variable)
+
+- Default Business rules handler (possibly with DMN support)
+
+- InclusiveGateway process variables merge/aggregate
+
+- Process/Parameters serialization
+
+- Swimlane support (send the swimlane to a target service to execute)
 
 
 ## Examples
@@ -45,6 +54,7 @@ A way to deal with this is to consider nodes as functions which take inputs and 
 Demo BPMN workflow
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png)
+
 
 ### Example 1: Running as local workflow
 
@@ -99,13 +109,11 @@ namespace WorkflowConsoleApp
 
 ### Example 2: Running as SOA/microservice workflow with remote BPMN execution
 
-Using the previous flow. Task 2 is set to send this flow to be executed remotely
+Using the demo BPMN flow. Custom Task handler is set to send this flow to be executed remotely
 
 ![alt tag](https://github.com/monirith/maestro/blob/master/examples/ZMQExample/micro.bpmn.png)
 
 This flow contains a task to execute on a third service
-
-Service1 runs => Service1 execute Task2 which sends a flow for Service2 to execute => Service2 executes the flow, sends work to Service3
 
 
 #### Result
