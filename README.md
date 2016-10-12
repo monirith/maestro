@@ -48,6 +48,10 @@ Demo BPMN workflow
 
 ### Example 1: Running as local workflow
 
+#### Result
+![alt tag](https://github.com/monirith/maestro/blob/master/examples/WorkflowConsoleApp/result_local.png)
+
+#### Local workflow execution
 ```c#
 using Maestro;
 
@@ -109,6 +113,8 @@ Service1 runs => Service1 execute Task2 which sends a flow for Service2 to execu
 
 #### Initial workflow service
 ```c#
+using Maestro;
+
 namespace ZMQExample
 {
     class Program
@@ -167,6 +173,8 @@ namespace ZMQExample
 
 #### Remote Service receiving a workflow to execute
 ```c#
+using Maestro;
+
 namespace ZMQExampleService
 {
     class Program
