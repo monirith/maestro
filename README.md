@@ -53,9 +53,8 @@ To avoid side effects, a node should take its inputs from a local context initia
 
 Demo BPMN workflow
 
-<div align="center" style="background-color: white; padding: 10px;">
-  <img src="https://github.com/monirith/maestro/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png?raw=true" alt="BPMN Workflow">
-</div>Ï
+![alt tag](https://github.com/monirith/maestro/blob/master/examples/WorkflowConsoleApp/WorkflowConsoleApp/flow.bpmn.png)
+
 
 ### Example 1: Running as local workflow
 
